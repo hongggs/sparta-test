@@ -88,7 +88,7 @@ class PlayerATeam extends Player
         int out = 0;
 
         // TODO
-        if(number.length()>4){
+        if(!(number.length()==4)){
             System.out.println("Invalid input(length 4). The opportunity passes to the next team.");
             return;
         }
@@ -146,7 +146,7 @@ class PlayerBTeam extends Player
         int out = 0;
 
         // TODO
-        if(number.length()>4){
+        if(!(number.length()==4)){
             System.out.println("Invalid input(length 4). The opportunity passes to the next team.");
             return;
         }
