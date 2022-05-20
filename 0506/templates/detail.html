@@ -38,15 +38,14 @@
         }
     </style>
     <script>
-        let idx = {{idx}}
         $(document).ready(function () {
             $("#update").hide();
         });
 
         function checkPw() {
             let pw = $("#post-pw").val();
-            if (pw === '{{ post.pw }}') {
-                showArticle();
+            if (pw === '{{ article.pw }}') {
+                showArticle(); //pw가 맞으면 수정,삭제 가능 페이지 보여준다.
             } else {
                 alert("비밀번호가 다릅니다!")
             }
@@ -54,23 +53,25 @@
 
         function showArticle() {
             $("#pw").hide();
-            $("#post-title").val('{{ post.title }}');
-            $("#post-content").val('{{ post.content }}');
+            $("#post-title").val('{{ article.title }}');
+            $("#post-content").val('{{ article.content }}');
             $("#update").show();
         }
 
-        function updateArticle() {
+        //수정
+         function updateArticle() {
             let title = $("#post-title").val();
             let content = $("#post-content").val();
+            let idx = {{ article["idx"] }}
 
             $.ajax({
                 type: "PUT",
-                url: `/article`,
-                data: {title: title, content: content, idx: idx},
-                success: function (response) { // 성공하면
+                url: "/article",
+                data: {idx: idx, title: title, content: content},
+                success: function (response) {
                     if (response["result"] == "success") {
-                        alert("수정 성공!");
-                        window.location.href = '/'
+                        alert("수정 완료!");
+                        window.location.reload();
                     } else {
                         alert("서버 오류!");
                     }
@@ -78,10 +79,12 @@
             })
         }
 
+
+        //삭제
         function deleteArticle() {
             $.ajax({
                 type: "DELETE",
-                url: `/article?idx={{ post.idx }}`,
+                url: `/article?idx={{ article.idx }}`,
                 success: function (response) { // 성공하면
                     if (response["result"] == "success") {
                         alert("삭제 성공!");

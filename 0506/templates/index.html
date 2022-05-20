@@ -43,11 +43,6 @@
             margin: auto;
         }
 
-        .is-hidden {
-            display: none;
-
-        }
-
         #post-box {
             width: 500px;
             margin: 20px auto;
@@ -57,10 +52,11 @@
         }
     </style>
     <script>
+        // asc일 경우 최신순, desc일 경우 조회순
         let order = "asc";
 
         $(document).ready(function () {
-            // showArticles();
+            showArticles();
         });
 
         function openClose() {
@@ -98,6 +94,7 @@
             })
         }
 
+        // order에 맞게 저장된 문서들을 보여준다.
         function showArticles() {
             $.ajax({
                 type: "GET",
@@ -105,9 +102,9 @@
                 data: {},
                 success: function (response) {
                     $("#list-post").empty();
-                    let articles = response["article_list"];
-                    for (let i = 0; i < articles.length; i++) {
-                        makeListPost(articles[i], i);
+                    let article_list = response["article_list"];
+                    for (let i = 0; i < article_list.length; i++) {
+                        makeListPost(article_list[i], i);
                     }
                 }
             })
@@ -124,22 +121,28 @@
                     $('#modal-title').html(title);
                     $('#modal-content').html(content);
                     $('#articleModal').modal('show');
+                    showArticles();
                 }
             })
         }
 
         function makeListPost(article, index) {
-            // todo
+            let tempHtml = ` <tr>
+                      <th scope="row">${index + 1}</th>
+                      <td><a href="#" onclick="readArticle(${article['idx']})">${article['title']}</td>
+                      <td>${article['read_count']}</td>
+                      <td>${article['reg_date']}</button></td>
+                      <td><button type="button" class="btn btn-danger" onclick="detailArticle(${article['idx']})">상세보기</button></td>
+                      </tr>
+                    `;
+            $("#list-post").append(tempHtml);
         }
 
         function detailArticle(idx) {
             window.location.href = `/detail/${idx}`
         }
-
-        function showModal(idx) {
-            $(`#articleModal-${idx}`).removeClass("is-hidden");
-        }
-
+제
+        //버튼을 클릭하면 정렬 다르게 가능
         function setOrder() {
             if (order == "asc") {
                 order = "desc";
@@ -174,7 +177,7 @@
                 <label for="post-title">제목</label>
                 <input id="post-title" class="form-control" placeholder="">
             </div>
-            <div class="form-group">
+             <div class="form-group">
                 <label for="post-pw">비밀번호</label>
                 <input type="password" id="post-pw" class="form-control" placeholder="">
             </div>
@@ -186,32 +189,23 @@
         </div>
     </div>
     <table class="table">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">타이틀</th>
-            <th scope="col">조회수<span onclick="setOrder()" id="viewOrder">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">타이틀</th>
+                  <th scope="col">조회수<span onclick="setOrder()" id="viewOrder">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                            class="bi bi-arrow-down-square-fill" viewBox="0 0 16 16">
   <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5a.5.5 0 0 1 1 0z"/>
 </svg>
                   </span></th>
-            <th scope="col">날짜</th>
-            <th scope="col">상세보기</th>
-        </tr>
-        </thead>
-        <tbody id="list-post">
-        {%for post in posts %}
-        <tr id="post-{{ post.idx }}">
-            <td>{{ post.idx }}</td>
-            <td><a href="" , onclick=readArticle('{{post.idx}}')>{{ post.title }}</a></td>
-            <td>{{ post.reg_date }}</td>
-            <td>
-                <button class="btn-red" onclick='window.location.href="/detail/{{ post.idx }}"'>상세보기</button>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
+                  <th scope="col">날짜</th>
+                  <th scope="col">상세보기</th>
+                </tr>
+              </thead>
+              <tbody id="list-post">
+
+              </tbody>
     </table>
 </div>
 <!-- Modal -->

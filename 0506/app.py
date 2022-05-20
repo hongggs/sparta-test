@@ -11,22 +11,25 @@ db = client.test
 
 @app.route('/')
 def index():
-    posts = list(db.posts.find({}, {'_id': False}))
-    return render_template('index.html', posts=posts)
+    return render_template('index.html')
 
 
 @app.route('/detail/<idx>')
 def detail(idx):
-    print(idx)
-    post = db.posts.find_one({'idx': int(idx)}, {'_id': False})
-    print(post)
-    return render_template('detail.html', post=post, idx=idx)
+    article = db.article.find_one({'idx': int(idx)}, {'_id': False})
+    return render_template("detail.html", article=article)
 
 
 @app.route('/articleList', methods=['GET'])
 def get_article_list():
-    article_list = 0  # todo
+    order = request.args.get('order')
+    # order가 asc일 경우 최신순(reg_date), desc일 경우 조회수(read_count)
+    if order == "desc":
+        article_list = list(db.article.find({}, {'_id': False}).sort([("read_count", -1)]))
+    else:
+        article_list = list(db.article.find({}, {'_id': False}).sort([("reg_date", -1)]))
 
+    # reg_date 속성 문자열 형식을 정리
     for article in article_list:
         article['reg_date'] = article['reg_date'].strftime('%Y.%m.%d %H:%M:%S')
 
@@ -36,47 +39,47 @@ def get_article_list():
 # Create
 @app.route('/article', methods=['POST'])
 def create_article():
-    if 0 >= db.posts.estimated_document_count():
-        idx = 0
+    title = request.form.get('title')
+    content = request.form.get('content')
+    pw = request.form.get('pw')
+    article_count = db.article.estimated_document_count({})
+
+    if article_count == 0:
+        max_value = 1
     else:
-        idx = list(db.posts.find({}, sort=[('_id', -1)]).limit(1))[0]['idx'] + 1
+        max_value = db.article.find_one(sort=[("idx", -1)])['idx'] + 1
+        # max_value = (list(db.test.find({}).sort([("idx", -1)])))[0]['idx'] + 1
 
-    title_receive = request.form['title']
-    content_receive = request.form['content']
-    password_receive = request.form['pw']
-
-    today = datetime.now()
-    reg_date = today.strftime("%Y.%m.%d %H:%M:%S")
-
-    doc = {
-        'idx': idx,
-        'title': title_receive,
-        'content': content_receive,
-        'pw': password_receive,
-        'reg_date': reg_date
+    article = {
+        'idx': max_value,
+        'title': title,
+        'content': content,
+        'pw': pw,
+        'read_count': 0,
+        'reg_date': datetime.now()
     }
-
-    db.posts.insert_one(doc)
-
+    db.article.insert_one(article)
     return {"result": "success"}
 
 
 # Read
 @app.route('/article', methods=['GET'])
 def read_article():
-    idx = request.args.get('idx')
-    article = db.posts.find_one({'idx': int(idx)}, {'_id': False})
+    idx = request.args['idx']
+    # 조회수 +1
+    db.article.update_one({'idx': int(idx)}, {'$inc': {'read_count': 1}})
+    article = db.article.find_one({'idx': int(idx)}, {'_id': False})
     return jsonify({"article": article})
 
 
 # Update
 @app.route('/article', methods=['PUT'])
 def update_article():
-    title_receive = request.form['title']
-    content_receive = request.form['content']
-    idx = request.form['idx']
+    idx = request.form.get('idx')
+    title = request.form.get('title')
+    content = request.form.get('content')
 
-    db.posts.update_one({"idx":int(idx)}, {"$set": {"title":title_receive, "content":content_receive}})
+    db.article.update_one({'idx': int(idx)}, {'$set': {'title': title, 'content': content}})
     return {"result": "success"}
 
 
@@ -84,9 +87,8 @@ def update_article():
 @app.route('/article', methods=['DELETE'])
 def delete_article():
     idx = request.args.get('idx')
-    print(idx)
-    db.posts.delete_one({'idx': int(idx)})
-    return {"result": "success", "msg": "삭제 성공"}
+    db.article.delete_one({'idx': int(idx)})
+    return {"result": "success"}
 
 
 if __name__ == "__main__":
